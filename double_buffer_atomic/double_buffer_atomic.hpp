@@ -85,8 +85,8 @@ private:
     const Buffer& getBuffer(BufferIndex index) const { return m_buffers[toSize(index)]; }
     Buffer&       getBuffer(BufferIndex index) { return m_buffers[toSize(index)]; }
 
-    BuffersType                     m_buffers{};
-    std::atomic<BufferIndexPair>    m_index{};
+    BuffersType                     m_buffers;
+    std::atomic<BufferIndexPair>    m_index;
     std::atomic<BufferUpdateStatus> m_info = BufferUpdateStatus::Idle;
 };
 

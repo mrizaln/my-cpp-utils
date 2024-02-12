@@ -6,9 +6,6 @@
 #include <string>
 #include <thread>
 
-using namespace std::chrono_literals;
-using Buffer = std::string;
-
 std::atomic<bool> g_interrupt{ false };
 
 void interruptHandler(int /* sig */)
@@ -20,10 +17,13 @@ void interruptHandler(int /* sig */)
 
 int main()
 {
-    std::signal(SIGINT, interruptHandler);
+    using namespace std::chrono_literals;
 
+    using Buffer       = std::string;
     using DoubleBuffer = DoubleBufferAtomic<Buffer, false>;    // on the stack (using std::array)
-    // using DoubleBuffer = DoubleBufferAtomic<Buffer, true>;     // dynamic memory allocation (on the heap)
+    // using DoubleBuffer = DoubleBufferAtomic<Buffer, true>;     // on the heap (using std::unique_ptr<Buffer[]>)
+
+    std::signal(SIGINT, interruptHandler);
 
     DoubleBuffer db{ "start" };
 
@@ -70,7 +70,7 @@ int main()
     //
     //         const auto& buffer = db.getFront();
     //
-    //         println("t3: (F) buffer: {}", buffer); // unsynchronized access: the buffer might ber swapped while read
+    //         println("t3: (F) buffer: {}", buffer); // unsynchronized access: the buffer might be swapped while read
     //         std::this_thread::sleep_for(108ms);
     //     }
     // });
@@ -82,8 +82,8 @@ int main()
     //      - sub-consumer 2: reads the buffer
     //      - sub-consumer 3: reads the buffer
     //      - ...
-    // - consumer: waits for all sub-consumers to finish (possibly with a barrier)
-    // - consumer: repeats
+    // - consumer: waits for all sub-consumers to finish (if async, possibly with a barrier)
+    // - consumer: continues with the next swap
 
     g_interrupt.wait(false);
 
